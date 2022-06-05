@@ -3,20 +3,27 @@
 
 #include <string>
 #include <vector>
+#include "serializeableExplicitly.hpp"
 
-class Column {
+class Column : public ISerializeableExplicitly
+{
 private:
+    std::string name;
     std::vector<std::string> values;
-    virtual bool validate(const std::string& value) const = 0;
+    virtual bool validate(const std::string &value) const = 0;
+
 public:
-    Column(size_t cells = 0);
+    Column(const std::string& _name, size_t cells = 0);
     virtual ~Column() = default;
-    virtual Column* clone() const = 0;
-    void insertCell(const std::string& value);
+    virtual Column *clone() const = 0;
+    void push_back(const std::string &value);
     virtual const std::string type() const = 0;
-    size_t size() const { return values.size();}
-    std::string& operator[](size_t index) { return values[index];}
-    const std::string& operator[](size_t index) const { return values[index];}
+    const std::string& getName() const {return name;}
+    size_t size() const { return values.size(); }
+    std::string &operator[](size_t index) { return values[index]; }
+    const std::string &operator[](size_t index) const { return values[index]; }
+    std::ostream &serialize(std::ostream &os = std::cout) const final;
+    std::istream &deserialize(std::istream &is = std::cin) final;
 };
 
 #endif

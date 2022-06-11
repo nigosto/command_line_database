@@ -13,7 +13,7 @@ private:
     virtual bool validate(const std::string &value) const = 0;
 
 public:
-    Column(const std::string& _name, size_t cells = 0);
+    Column(const std::string& _name = "", size_t cells = 0);
     virtual ~Column() = default;
     virtual Column *clone() const = 0;
     void push_back(const std::string &value);

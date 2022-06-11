@@ -2,10 +2,18 @@
 #define __DATABASE_HPP
 
 #include "table.hpp"
-#include "serializeable.hpp"
+#include "serializeableExplicitly.hpp"
 
-class Database {
-//TODO
+class Database : public ISerializeableExplicitly {
+private:
+    std::vector<Table> tables;
+
+public:
+    Database() : tables(0) {}
+    Table* find(const std::string& name);
+    void import(const std::string& filename);
+    std::ostream &serialize(std::ostream &os = std::cout) const final;
+    std::istream &deserialize(std::istream &is = std::cin) final;
 };
 
 #endif

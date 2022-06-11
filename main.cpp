@@ -4,6 +4,7 @@
 #include "doubleColumn.hpp"
 #include "stringColumn.hpp"
 #include "table.hpp"
+#include "database.hpp"
 
 int main()
 {
@@ -42,17 +43,44 @@ int main()
     // }
     // b.serialize();
 
-    Table t("table", "table.txt");
-    t.addColumn("quantity", "integer");
-    t.addColumn("rating", "integer");
-    std::vector<std::string> v1 {"12", "+17"};
-    std::vector<std::string> v2 {"5"};
-    t.insertRow(v1);
-    t.insertRow(v2);
-    t.addColumn("diopter", "double");
+    // Table t("table", "table.txt");
+    // t.addColumn("quantity", "integer");
+    // t.addColumn("rating", "integer");
+    // std::vector<std::string> v1 {"12", "+17"};
+    // std::vector<std::string> v2 {"5"};
+    // t.insertRow(v1);
+    // t.insertRow(v2);
+    // t.addColumn("diopter", "double");
 
-    t.print();
-    t.serialize();
+    // t.print();
+    // t.serialize();
+
+    std::ifstream is{
+        "database.txt",
+        std::ios::in};
+
+    Database db;
+    db.deserialize(is);
+    is.close();
+    try
+    {
+        db.import("table.txt");
+
+        std::ofstream os{
+            "database.txt",
+            std::ios::out};
+        db.serialize(os);
+        os.close();
+        Table *table = db.find("table");
+        if (table != nullptr)
+        {
+            table->print();
+        }
+    }
+    catch (const std::runtime_error &e)
+    {
+        std::cerr << e.what() << '\n';
+    }
 
     return 0;
 }

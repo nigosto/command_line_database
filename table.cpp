@@ -4,10 +4,10 @@
 #include "doubleColumn.hpp"
 #include "stringColumn.hpp"
 
-Table::Table(std::string &&_name, std::string &&_filename)
-: name(std::move(_name)), filename(std::move(_filename)), rows_count(0), columns_count(0) {}
+Table::Table(std::string &&_filename, std::string &&_name)
+    : name(std::move(_name)), filename(std::move(_filename)), rows_count(0), columns_count(0) {}
 
-Table::Table(std::string &_name, std::string &_filename)
+Table::Table(const std::string &_filename, const std::string &_name)
     : name(_name), filename(_filename), rows_count(0), columns_count(0) {}
 
 Table::Table(const Table &other)
@@ -76,7 +76,7 @@ std::string *Table::find(size_t columnIndex, const std::string &value)
     // TODO
 }
 
-void Table::insertRow(const std::vector<std::string> values)
+void Table::insertRow(const std::vector<std::string> &values)
 {
     rows_count++;
     for (size_t i = 0; i < values.size(); i++)
@@ -96,12 +96,14 @@ void Table::rename(const std::string &_name)
 
 void Table::serialize() const
 {
-    std::ofstream os {
+    std::ofstream os{
         filename,
-        std::ios::out
-    };
+        std::ios::out};
 
-    os << name << '\n' << filename << '\n'<< columns_count << '\n'<< rows_count << '\n';
+    os << name << '\n'
+       << '\n'
+       << columns_count << '\n'
+       << rows_count << '\n';
     for (size_t i = 0; i < columns_count; i++)
     {
         columns[i]->serialize(os);
@@ -111,5 +113,37 @@ void Table::serialize() const
 
 void Table::deserialize()
 {
-    // TODO
+    std::ifstream is{
+        filename,
+        std::ios::out};
+    std::string _name;
+    std::getline(is, _name);
+    name = _name;
+    size_t _columns_count;
+    size_t _rows_count;
+    is >> _columns_count >> _rows_count;
+    columns_count = _columns_count;
+    rows_count = _rows_count;
+    is.ignore();
+    for (size_t i = 0; i < _columns_count; i++)
+    {
+        std::string type;
+        std::getline(is, type);
+        if (type == "integer")
+        {
+            columns.push_back(new IntColumn());
+            columns[i]->deserialize(is);
+        }
+        else if (type == "double")
+        {
+            columns.push_back(new DoubleColumn());
+            columns[i]->deserialize(is);
+        }
+        else if (type == "string")
+        {
+            columns.push_back(new StringColumn());
+            columns[i]->deserialize(is);
+        }
+    }
+    is.close();
 }

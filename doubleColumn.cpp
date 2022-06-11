@@ -7,7 +7,7 @@ bool DoubleColumn::validate(const std::string &value) const {
 DoubleColumn::DoubleColumn(const std::string& _name, size_t cells) : Column(_name,cells) {}
 
 DoubleColumn *DoubleColumn::clone() const {
-//TODO
+    return new DoubleColumn(*this);
 }
 
 double DoubleColumn::valueAsNumber(size_t index) {

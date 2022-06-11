@@ -9,7 +9,7 @@ private:
     bool validate(const std::string &value) const final;
 
 public:
-    IntColumn(const std::string& _name, size_t cells = 0);
+    IntColumn(const std::string& _name = "", size_t cells = 0);
     IntColumn *clone() const final;
     const std::string type() const final { return "integer"; }
     int valueAsNumber(size_t index);

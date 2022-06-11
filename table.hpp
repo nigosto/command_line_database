@@ -14,8 +14,8 @@ private:
     size_t columns_count;
 
 public:
-    Table(std::string &_name, std::string &_filename);
-    Table(std::string &&_name, std::string &&_filename);
+    Table(const std::string &_filename="", const std::string &_name = "");
+    Table(std::string &&_filename, std::string &&_name);
     Table(const Table &other);
     Table(Table &&other);
     ~Table();
@@ -24,10 +24,12 @@ public:
     void swap(Table &other);
     void addColumn(const std::string &_name, const std::string &_type);
     std::string *find(size_t columnIndex, const std::string &value);
-    void insertRow(const std::vector<std::string> values);
+    void insertRow(const std::vector<std::string>& values);
     void rename(const std::string &_name);
     void serialize() const final;
     void deserialize() final;
+    const std::string& getName() const {return name;}
+    const std::string& getFilename() const {return filename;}
 
     //using during development only
     void print() {

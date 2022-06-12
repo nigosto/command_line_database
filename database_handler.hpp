@@ -9,6 +9,10 @@ private:
     std::string file;
     bool isOpened;
     void open(const std::string& filename);
+    void help() const noexcept;
+    void save();
+    void saveas(const std::string& filename);
+    void close();
 public:
     DatabaseHandler();
     void readCommands();

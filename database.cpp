@@ -6,8 +6,9 @@
 Table *Database::find(const std::string &name)
 {
     std::vector<Table>::iterator result = std::find_if(std::begin(tables), std::end(tables), [name](const Table &table)
-                            { return table.getName() == name; });
-    if(result != std::end(tables)) {
+                                                       { return table.getName() == name; });
+    if (result != std::end(tables))
+    {
         return &(*(result));
     }
     return nullptr;
@@ -49,19 +50,22 @@ std::ostream &Database::serialize(std::ostream &os) const
 
 std::istream &Database::deserialize(std::istream &is)
 {
-    size_t size = 0;
-    is >> size;
-
-    is.ignore();
-    for (size_t i = 0; i < size; i++)
+    if (is.peek() != std::istream::traits_type::eof())
     {
-        std::string name;
-        std::getline(is, name);
-        std::string filename;
-        std::getline(is, filename);
-        Table t(filename, name);
-        tables.push_back(t);
-        tables[i].deserialize();
+        size_t size = 0;
+        is >> size;
+
+        is.ignore();
+        for (size_t i = 0; i < size; i++)
+        {
+            std::string name;
+            std::getline(is, name);
+            std::string filename;
+            std::getline(is, filename);
+            Table t(filename, name);
+            tables.push_back(t);
+            tables[i].deserialize();
+        }
     }
     return is;
 }

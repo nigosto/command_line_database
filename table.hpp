@@ -15,24 +15,27 @@ private:
 
 public:
     Table(const std::string &_filename="", const std::string &_name = "");
-    Table(std::string &&_filename, std::string &&_name);
+    //Table(std::string &&_filename, std::string &&_name);
     Table(const Table &other);
-    Table(Table &&other);
+    //Table(Table &&other);
     ~Table();
     Table &operator=(const Table &other);
-    Table &operator=(Table &&other);
+    //Table &operator=(Table &&other);
     void swap(Table &other);
     void addColumn(const std::string &_name, const std::string &_type);
-    std::string *find(size_t columnIndex, const std::string &value);
+    //std::string *find(size_t columnIndex, const std::string &value);
     void insertRow(const std::vector<std::string>& values);
     void rename(const std::string &_name);
     void serialize() const final;
     void deserialize() final;
     const std::string& getName() const {return name;}
     const std::string& getFilename() const {return filename;}
+    size_t getRows() const { return rows_count; }
+    size_t getColumns() const {return columns_count;}
+    Column* operator[](size_t index) {return columns[index];}
 
     //using during development only
-    void print() {
+    void print() const {
         for (size_t i = 0; i < columns_count; i++)
         {
             std::cout<<columns[i]->getName()<< ' ';

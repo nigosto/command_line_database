@@ -4,8 +4,8 @@
 #include "doubleColumn.hpp"
 #include "stringColumn.hpp"
 
-Table::Table(std::string &&_filename, std::string &&_name)
-    : name(std::move(_name)), filename(std::move(_filename)), rows_count(0), columns_count(0) {}
+// Table::Table(std::string &&_filename, std::string &&_name)
+//     : name(std::move(_name)), filename(std::move(_filename)), rows_count(0), columns_count(0) {}
 
 Table::Table(const std::string &_filename, const std::string &_name)
     : name(_name), filename(_filename), rows_count(0), columns_count(0) {}
@@ -19,10 +19,10 @@ Table::Table(const Table &other)
     }
 }
 
-Table::Table(Table &&other)
-{
-    // TODO
-}
+// Table::Table(Table &&other)
+// {
+//     // TODO
+// }
 
 Table::~Table()
 {
@@ -39,10 +39,10 @@ Table &Table::operator=(const Table &other)
     return *this;
 }
 
-Table &Table::operator=(Table &&other)
-{
-    // TODO
-}
+// Table &Table::operator=(Table &&other)
+// {
+//     // TODO
+// }
 
 void Table::swap(Table &other)
 {
@@ -71,10 +71,10 @@ void Table::addColumn(const std::string &_name, const std::string &_type)
     columns_count++;
 }
 
-std::string *Table::find(size_t columnIndex, const std::string &value)
-{
-    // TODO
-}
+// std::string *Table::find(size_t columnIndex, const std::string &value)
+// {
+//     // TODO
+// }
 
 void Table::insertRow(const std::vector<std::string> &values)
 {

@@ -7,7 +7,10 @@ class DatabaseHandler {
 private:
     Database database;
     std::string file;
+    bool isOpened;
+    void open(const std::string& filename);
 public:
+    DatabaseHandler();
     void readCommands();
     //TODO
 };

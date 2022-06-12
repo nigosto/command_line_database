@@ -22,8 +22,8 @@ public:
     size_t size() const { return values.size(); }
     std::string &operator[](size_t index) { return values[index]; }
     const std::string &operator[](size_t index) const { return values[index]; }
-    std::ostream &serialize(std::ostream &os = std::cout) const final;
-    std::istream &deserialize(std::istream &is = std::cin) final;
+    std::ostream &serialize(std::ostream &os = std::cout) const override;
+    std::istream &deserialize(std::istream &is = std::cin) override;
 };
 
 #endif

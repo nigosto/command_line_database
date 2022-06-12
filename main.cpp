@@ -5,6 +5,7 @@
 #include "stringColumn.hpp"
 #include "table.hpp"
 #include "database.hpp"
+#include "database_handler.hpp"
 
 int main()
 {
@@ -55,32 +56,60 @@ int main()
     // t.print();
     // t.serialize();
 
-    std::ifstream is{
-        "database.txt",
-        std::ios::in};
+    // std::ifstream is{
+    //     "database.txt",
+    //     std::ios::in};
 
-    Database db;
-    db.deserialize(is);
-    is.close();
-    try
-    {
-        db.import("table.txt");
+    // Database db;
+    // db.deserialize(is);
+    // is.close();
+    // try
+    // {
+    //     db.import("table1.txt");
 
-        std::ofstream os{
-            "database.txt",
-            std::ios::out};
-        db.serialize(os);
-        os.close();
-        Table *table = db.find("table");
-        if (table != nullptr)
-        {
-            table->print();
-        }
-    }
-    catch (const std::runtime_error &e)
-    {
-        std::cerr << e.what() << '\n';
-    }
+    //     std::ofstream os{
+    //         "database.txt",
+    //         std::ios::out};
+    //     db.serialize(os);
+    //     os.close();
+    //     Table *table = db.find("mobile phones");
+    //     if (table != nullptr)
+    //     {
+    //         table->print();
+    //     }
+    // }
+    // catch (const std::runtime_error &e)
+    // {
+    //     std::cerr << e.what() << '\n';
+    // }
+
+    // DoubleColumn c("mobile phones");
+    // c.push_back("199.99");
+    // c.push_back("-0.99");
+    // c.push_back("+199.99");
+    // std::cout << c.type() << '\n';
+    // for (size_t i = 0; i < c.size(); i++)
+    // {
+    //     std::cout << c[i] << '\n';
+    // }
+    // std::cout << '\n';
+    // for (size_t i = 0; i < c.size(); i++)
+    // {
+    //     std::cout << c.valueAsNumber(i) << '\n';
+    // }
+
+    // StringColumn s("brands");
+    // s.push_back("\"Huawei\"");
+    // s.push_back("\"Apple\"");
+    // s.push_back("\"Samsung\"");
+    // std::cout << s.type() << '\n';
+    // for (size_t i = 0; i < s.size(); i++)
+    // {
+    //     std::cout << s[i] << '\n';
+    // }
+
+    DatabaseHandler db_handler;
+    db_handler.readCommands();
 
     return 0;
 }

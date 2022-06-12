@@ -29,7 +29,7 @@ void Database::import(const std::string &filename)
     {
         if (tables[i].getName() == table.getName())
         {
-            //throw std::runtime_error("A table with this name already exists!");
+            throw std::runtime_error("A table with this name already exists!");
         }
     }
 

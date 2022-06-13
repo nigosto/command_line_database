@@ -101,7 +101,6 @@ void Table::serialize() const
         std::ios::out};
 
     os << name << '\n'
-       << '\n'
        << columns_count << '\n'
        << rows_count << '\n';
     for (size_t i = 0; i < columns_count; i++)

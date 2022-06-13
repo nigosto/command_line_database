@@ -33,6 +33,7 @@ public:
     size_t getRows() const { return rows_count; }
     size_t getColumns() const {return columns_count;}
     Column* operator[](size_t index) {return columns[index];}
+    void changeFilename(const std::string& file) { filename = file; }
 
     //using during development only
     void print() const {

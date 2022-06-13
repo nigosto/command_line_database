@@ -44,6 +44,7 @@ std::ostream &Database::serialize(std::ostream &os) const
     {
         os << tables[i].getName() << '\n'
            << tables[i].getFilename() << '\n';
+        tables[i].serialize();
     }
     return os;
 }
@@ -68,4 +69,13 @@ std::istream &Database::deserialize(std::istream &is)
         }
     }
     return is;
+}
+
+void Database::printTableNames() noexcept
+{
+    std::cout << "List of all tables: \n";
+    for (size_t i = 0; i < tables.size(); i++)
+    {
+        std::cout << i + 1 << ") " << tables[i].getName() << '\n';
+    }
 }

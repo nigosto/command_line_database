@@ -79,31 +79,67 @@ void DatabaseHandler::readCommands()
         }
         else if (command == "import" && isOpened)
         {
-            // TODO
+            try
+            {
+                database.import(parameters[0]);
+                std::cout << "Table successfully imported to database!\n";
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << e.what() << '\n';
+            }
         }
         else if (command == "showtables" && isOpened)
         {
-            // TODO
+            database.printTableNames();
         }
         else if (command == "describe" && isOpened)
         {
-            // TODO
+            describe(parameters[0]);
         }
         else if (command == "print" && isOpened)
         {
-            // TODO
+            print(parameters[0]);
         }
         else if (command == "export" && isOpened)
         {
-            // TODO
+            try
+            {
+                exportTable(parameters[0], parameters[1]);
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << e.what() << '\n';
+            }
         }
         else if (command == "select" && isOpened)
         {
-            // TODO
+            size_t column = 0;
+            for (size_t i = 0; i < parameters[0].size(); i++)
+            {
+                column *= 10;
+                column += parameters[0][i] - '0';
+            }
+
+            try
+            {
+                select(column, parameters[1], parameters[2]);
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << e.what() << '\n';
+            }
         }
         else if (command == "addcolumn" && isOpened)
         {
-            // TODO
+            try
+            {
+                addcolumn(parameters[0], parameters[1], parameters[2]);
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << e.what() << '\n';
+            }
         }
         else if (command == "update" && isOpened)
         {
@@ -143,8 +179,9 @@ void DatabaseHandler::readCommands()
             {
                 std::cout << "Invalid command! Type \"help\" to see list of commands!\n";
             }
-            else {
-                std::cout<<"Exiting program...\n";
+            else
+            {
+                std::cout << "Exiting program...\n";
             }
         }
     } while (command != "exit");
@@ -251,9 +288,105 @@ void DatabaseHandler::saveas(const std::string &filename)
     database = Database();
 }
 
-void DatabaseHandler::close() {
+void DatabaseHandler::close()
+{
     isOpened = false;
     std::cout << "Successfully closed " << file << '\n';
     file = "";
     database = Database();
+}
+
+void DatabaseHandler::describe(const std::string &name)
+{
+    Table *table = database.find(name);
+    if (table != nullptr)
+    {
+        std::cout << "Types of table " << name << ":\n";
+        for (size_t i = 0; i < table->getColumns(); i++)
+        {
+            std::cout << i + 1 << ") " << (*table)[i]->type() << '\n';
+        }
+    }
+    else
+    {
+        std::cout << "Couldn't find table with specified name!\n";
+    }
+}
+
+void DatabaseHandler::print(const std::string &name)
+{
+    Table *table = database.find(name);
+    if (table != nullptr)
+    {
+        for (size_t i = 0; i < table->getColumns(); i++)
+        {
+            std::cout << std::setw(30) << std::left << (*table)[i]->getName() << ' ';
+        }
+        std::cout << '\n';
+        for (size_t i = 0; i < table->getRows(); i++)
+        {
+            for (size_t j = 0; j < table->getColumns(); j++)
+            {
+                std::cout << std::setw(30) << std::left << (*(*table)[j])[i] << ' ';
+            }
+            std::cout << '\n';
+        }
+    }
+    else
+    {
+        std::cout << "Couldn't find table with specified name!\n";
+    }
+}
+
+void DatabaseHandler::exportTable(const std::string &name, const std::string &filename)
+{
+    Table *searchTable = database.find(name);
+    if (searchTable != nullptr)
+    {
+        Table targetTable(*searchTable);
+        targetTable.changeFilename(filename);
+        targetTable.serialize();
+        std::cout << "Table exported successfully!\n";
+    }
+    else
+    {
+        std::cout << "Couldn't find table with specified name!\n";
+    }
+}
+
+void DatabaseHandler::select(size_t column, const std::string &value, const std::string &table)
+{
+    Table *searchTable = database.find(table);
+    if (searchTable != nullptr)
+    {
+        for (size_t i = 0; i < (*searchTable)[column - 1]->size(); i++)
+        {
+            if ((*(*searchTable)[column - 1])[i] == value)
+            {
+                for (size_t j = 0; j < searchTable->getColumns(); j++)
+                {
+                    std::cout << std::setw(30) << std::left << (*(*searchTable)[j])[i] << ' ';
+                }
+                std::cout << '\n';
+            }
+        }
+    }
+    else
+    {
+        std::cout << "Couldn't find table with specified name!\n";
+    }
+}
+
+void DatabaseHandler::addcolumn(const std::string &table, const std::string &column, const std::string &type)
+{
+    Table *searchTable = database.find(table);
+    if (searchTable != nullptr)
+    {
+        searchTable->addColumn(column, type);
+        std::cout << "Column " << column << " added successfully to table " << table << '\n';
+    }
+    else
+    {
+        std::cout << "Couldn't find table with specified name!\n";
+    }
 }

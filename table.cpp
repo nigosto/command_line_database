@@ -1,4 +1,5 @@
 #include <fstream>
+#include <algorithm>
 #include "table.hpp"
 #include "intColumn.hpp"
 #include "doubleColumn.hpp"
@@ -78,15 +79,18 @@ void Table::addColumn(const std::string &_name, const std::string &_type)
 
 void Table::insertRow(const std::vector<std::string> &values)
 {
+    for (size_t i = 0; i < getColumns(); i++)
+    {
+        if (values.size() >= i + 1)
+        {
+            columns[i]->push_back(values[i]);
+        }
+        else
+        {
+            columns[i]->push_back("NULL");
+        }
+    }
     rows_count++;
-    for (size_t i = 0; i < values.size(); i++)
-    {
-        columns[i]->push_back(values[i]);
-    }
-    for (size_t i = values.size(); i < columns_count; i++)
-    {
-        columns[i]->push_back("NULL");
-    }
 }
 
 void Table::rename(const std::string &_name)
@@ -145,4 +149,90 @@ void Table::deserialize()
         }
     }
     is.close();
+}
+
+void Table::remove(size_t rowIndex)
+{
+    for (size_t i = 0; i < getColumns(); i++)
+    {
+        columns[i]->remove(rowIndex);
+    }
+
+    rows_count--;
+}
+
+Table innerJoin(const Table &first, size_t firstColumn, const Table &second, size_t secondColumn)
+{
+
+    Table result(first.getName() + '-' + second.getName() + ".txt", first.getName() + '-' + second.getName());
+    for (size_t i = 0; i < first.getColumns(); i++)
+    {
+        if (i == firstColumn)
+        {
+            result.addColumn(first.getName() + '-' + first.columns[i]->getName(), first.columns[i]->type());
+        }
+        else
+        {
+            result.addColumn(first.columns[i]->getName(), first.columns[i]->type());
+        }
+    }
+    for (size_t i = 0; i < second.getColumns(); i++)
+    {
+        if (i == secondColumn)
+        {
+            result.addColumn(second.getName() + '-' + second.columns[i]->getName(), second.columns[i]->type());
+        }
+        else
+        {
+            result.addColumn(second.columns[i]->getName(), second.columns[i]->type());
+        }
+    }
+
+    if (first.getRows() <= second.getRows())
+    {
+        for (size_t i = 0; i < first.getRows(); i++)
+        {
+            for (size_t j = 0; j < second.getRows(); j++)
+            {
+                if ((*first.columns[firstColumn])[i] == (*second.columns[secondColumn])[j])
+                {
+                    std::vector<std::string> v;
+                    for (size_t k = 0; k < first.getColumns(); k++)
+                    {
+                        v.push_back((*first.columns[k])[i]);
+                    }
+                    for (size_t k = 0; k < second.getColumns(); k++)
+                    {
+                        v.push_back((*second.columns[k])[j]);
+                    }
+
+                    result.insertRow(v);
+                }
+            }
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < second.getRows(); i++)
+        {
+            for (size_t j = 0; j < first.getRows(); j++)
+            {
+                if ((*first.columns[firstColumn])[j] == (*second.columns[secondColumn])[i])
+                {
+                    std::vector<std::string> v;
+                    for (size_t k = 0; k < first.getColumns(); k++)
+                    {
+                        v.push_back((*first.columns[k])[j]);
+                    }
+                    for (size_t k = 0; k < second.getColumns(); k++)
+                    {
+                        v.push_back((*second.columns[k])[i]);
+                    }
+
+                    result.insertRow(v);
+                }
+            }
+        }
+    }
+    return result;
 }

@@ -4,6 +4,17 @@
 #include <iomanip>
 #include "database_handler.hpp"
 
+size_t DatabaseHandler::stringToInt(const std::string &str) const
+{
+    size_t result = 0;
+    for (size_t i = 0; i < str.size(); i++)
+    {
+        result *= 10;
+        result += str[i] - '0';
+    }
+    return result;
+}
+
 DatabaseHandler::DatabaseHandler() : isOpened(false) {}
 
 void DatabaseHandler::readCommands()
@@ -100,6 +111,7 @@ void DatabaseHandler::readCommands()
         else if (command == "print" && isOpened)
         {
             print(parameters[0]);
+            // TODO
         }
         else if (command == "export" && isOpened)
         {
@@ -114,12 +126,7 @@ void DatabaseHandler::readCommands()
         }
         else if (command == "select" && isOpened)
         {
-            size_t column = 0;
-            for (size_t i = 0; i < parameters[0].size(); i++)
-            {
-                column *= 10;
-                column += parameters[0][i] - '0';
-            }
+            size_t column = stringToInt(parameters[0]);
 
             try
             {
@@ -143,27 +150,62 @@ void DatabaseHandler::readCommands()
         }
         else if (command == "update" && isOpened)
         {
-            // TODO
+            size_t searchColumn = stringToInt(parameters[1]);
+            size_t targetColumn = stringToInt(parameters[3]);
+            try
+            {
+                update(parameters[0], searchColumn, parameters[2], targetColumn, parameters[4]);
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << e.what() << '\n';
+            }
         }
         else if (command == "delete" && isOpened)
         {
-            // TODO
+            size_t column = stringToInt(parameters[1]);
+            try
+            {
+                deleteRows(parameters[0], column, parameters[2]);
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << e.what() << '\n';
+            }
         }
         else if (command == "insert" && isOpened)
         {
-            // TODO
+            try
+            {
+                insert(parameters);
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << e.what() << '\n';
+            }
         }
         else if (command == "innerjoin" && isOpened)
         {
-            // TODO
+            try
+            {
+                size_t column1 = stringToInt(parameters[1]);   
+                size_t column2 = stringToInt(parameters[3]);
+                innerjoin(parameters[0], column1, parameters[2], column2);   
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << '\n';
+            }
+            
         }
         else if (command == "rename" && isOpened)
         {
-            // TODO
+            rename(parameters[0], parameters[1]);
         }
         else if (command == "count" && isOpened)
         {
-            // TODO
+            size_t column = stringToInt(parameters[1]);
+            count(parameters[0], column, parameters[2]);
         }
         else if (command == "aggregate" && isOpened)
         {
@@ -320,14 +362,14 @@ void DatabaseHandler::print(const std::string &name)
     {
         for (size_t i = 0; i < table->getColumns(); i++)
         {
-            std::cout << std::setw(30) << std::left << (*table)[i]->getName() << ' ';
+            std::cout << std::setw(20) << std::left << (*table)[i]->getName() << ' ';
         }
         std::cout << '\n';
         for (size_t i = 0; i < table->getRows(); i++)
         {
             for (size_t j = 0; j < table->getColumns(); j++)
             {
-                std::cout << std::setw(30) << std::left << (*(*table)[j])[i] << ' ';
+                std::cout << std::setw(20) << std::left << (*(*table)[j])[i] << ' ';
             }
             std::cout << '\n';
         }
@@ -365,7 +407,7 @@ void DatabaseHandler::select(size_t column, const std::string &value, const std:
             {
                 for (size_t j = 0; j < searchTable->getColumns(); j++)
                 {
-                    std::cout << std::setw(30) << std::left << (*(*searchTable)[j])[i] << ' ';
+                    std::cout << std::setw(20) << std::left << (*(*searchTable)[j])[i] << ' ';
                 }
                 std::cout << '\n';
             }
@@ -384,6 +426,122 @@ void DatabaseHandler::addcolumn(const std::string &table, const std::string &col
     {
         searchTable->addColumn(column, type);
         std::cout << "Column " << column << " added successfully to table " << table << '\n';
+    }
+    else
+    {
+        std::cout << "Couldn't find table with specified name!\n";
+    }
+}
+
+void DatabaseHandler::update(const std::string &table, size_t searchColumn, const std::string &searchValue, size_t targetColumn, const std::string &targetValue)
+{
+    Table *searchTable = database.find(table);
+    if (searchTable != nullptr)
+    {
+        for (size_t i = 0; i < (*searchTable)[searchColumn - 1]->size(); i++)
+        {
+            if ((*(*searchTable)[searchColumn - 1])[i] == searchValue)
+            {
+                (*(*searchTable)[targetColumn - 1])[i] = targetValue;
+            }
+        }
+        std::cout << "Table " << table << " successfully updated!\n";
+    }
+    else
+    {
+        std::cout << "Couldn't find table with specified name!\n";
+    }
+}
+
+void DatabaseHandler::deleteRows(const std::string &table, size_t column, const std::string &value)
+{
+    Table *searchTable = database.find(table);
+    if (searchTable != nullptr)
+    {
+        for (size_t i = 0; i < (*searchTable)[column - 1]->size(); i++)
+        {
+            if ((*(*searchTable)[column - 1])[i] == value)
+            {
+                searchTable->remove(i);
+            }
+        }
+        std::cout << "Rows deleted successfully!\n";
+    }
+    else
+    {
+        std::cout << "Couldn't find table with specified name!\n";
+    }
+}
+
+void DatabaseHandler::insert(const std::vector<std::string> &parameters)
+{
+    Table *table = database.find(parameters[0]);
+    if (table != nullptr)
+    {
+        std::vector<std::string> values(parameters);
+        values.erase(std::begin(values));
+        table->insertRow(values);
+        std::cout << "Row inserted successfully!\n";
+    }
+    else
+    {
+        std::cout << "Couldn't find table with specified name!\n";
+    }
+}
+
+void DatabaseHandler::innerjoin(const std::string &table1, size_t column1, const std::string &table2, size_t column2)
+{
+    Table* firstTable = database.find(table1);
+    Table* secondTable = database.find(table2); 
+    if(firstTable != nullptr && secondTable != nullptr) {
+        Table result = innerJoin(*firstTable, column1-1, *secondTable, column2-1);
+        result.serialize();
+        database.import(result.getFilename());
+        std::cout<<"Successfully joined tables "<<firstTable->getName()<<" and "<<secondTable->getName()<<" into "<<result.getName()<<"!\n";
+    }
+    else {
+        std::cout<<"Couldn't find one of the tables!\n";
+    }
+}
+
+void DatabaseHandler::rename(const std::string &oldName, const std::string &newName)
+{
+    Table *table = database.find(oldName);
+    if (table != nullptr)
+    {
+        if (database.find(newName) != nullptr)
+        {
+            std::cout << "A table with this name already exists!\n";
+        }
+        else
+        {
+            table->rename(newName);
+            std::cout << "Table "
+                      << "\"" << oldName << "\" "
+                      << "renamed to "
+                      << "\"" << newName << "\"!\n";
+        }
+    }
+    else
+    {
+        std::cout << "Couldn't find table with specified name!\n";
+    }
+}
+
+void DatabaseHandler::count(const std::string &table, size_t column, const std::string &value)
+{
+    Table *searchTable = database.find(table);
+    if (searchTable != nullptr)
+    {
+        size_t counter = 0;
+        for (size_t i = 0; i < (*searchTable)[column - 1]->size(); i++)
+        {
+            if ((*(*searchTable)[column - 1])[i] == value)
+            {
+                counter++;
+            }
+        }
+        std::cout << counter << " rows in column " << (*searchTable)[column - 1]->getName() << " contain value " << value << "!\n";
     }
     else
     {

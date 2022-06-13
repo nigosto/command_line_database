@@ -24,6 +24,7 @@ public:
     const std::string &operator[](size_t index) const { return values[index]; }
     std::ostream &serialize(std::ostream &os = std::cout) const override;
     std::istream &deserialize(std::istream &is = std::cin) override;
+    void remove(size_t index);
 };
 
 #endif

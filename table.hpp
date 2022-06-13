@@ -34,6 +34,8 @@ public:
     size_t getColumns() const {return columns_count;}
     Column* operator[](size_t index) {return columns[index];}
     void changeFilename(const std::string& file) { filename = file; }
+    void remove(size_t rowIndex);
+    friend Table innerJoin(const Table& first, size_t firstColumn, const Table& second, size_t secondColumn);
 
     //using during development only
     void print() const {

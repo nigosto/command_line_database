@@ -10,7 +10,7 @@ Column::Column(const std::string &_name, size_t cells) : values(cells), name(_na
 
 void Column::push_back(const std::string &value)
 {
-    if (validate(value))
+    if (validate(value) || value == "NULL")
     {
         values.push_back(value);
     }
@@ -43,4 +43,9 @@ std::istream &Column::deserialize(std::istream &is)
         push_back(str);
     }
     return is;
+}
+
+void Column::remove(size_t index)
+{
+    values.erase(std::begin(values) + index);
 }

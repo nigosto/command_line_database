@@ -2,9 +2,9 @@
 #define __DATABASE_HPP
 
 #include "table.hpp"
-#include "serializeableExplicitly.hpp"
+#include "serializeable.hpp"
 
-class Database : public ISerializeableExplicitly {
+class Database : public ISerializeable {
 private:
     std::vector<Table> tables;
 
@@ -14,8 +14,8 @@ public:
     void import(const std::string& filename);
     std::ostream &serialize(std::ostream &os = std::cout) const final;
     std::istream &deserialize(std::istream &is = std::cin) final;
-
-    void printTableNames() noexcept;
+    size_t size() const {return tables.size(); }
+    const Table& operator[](size_t index) const;
 };
 
 #endif

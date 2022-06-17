@@ -16,6 +16,15 @@ void Column::push_back(const std::string &value)
     }
 }
 
+const std::string &Column::operator[](size_t index) const
+{
+    if(index < 0 || index > values.size()-1) {
+        throw std::runtime_error("Invalid index!");
+    }
+
+    return values[index];
+}
+
 std::ostream &Column::serialize(std::ostream &os) const
 {
     os << type() << '\n'

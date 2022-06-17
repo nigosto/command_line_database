@@ -5,9 +5,6 @@
 #include "doubleColumn.hpp"
 #include "stringColumn.hpp"
 
-// Table::Table(std::string &&_filename, std::string &&_name)
-//     : name(std::move(_name)), filename(std::move(_filename)), rows_count(0), columns_count(0) {}
-
 Table::Table(const std::string &_filename, const std::string &_name)
     : name(_name), filename(_filename), rows_count(0), columns_count(0) {}
 
@@ -19,11 +16,6 @@ Table::Table(const Table &other)
         columns[i] = other.columns[i]->clone();
     }
 }
-
-// Table::Table(Table &&other)
-// {
-//     // TODO
-// }
 
 Table::~Table()
 {
@@ -39,11 +31,6 @@ Table &Table::operator=(const Table &other)
     swap(copy);
     return *this;
 }
-
-// Table &Table::operator=(Table &&other)
-// {
-//     // TODO
-// }
 
 void Table::swap(Table &other)
 {
@@ -72,11 +59,6 @@ void Table::addColumn(const std::string &_name, const std::string &_type)
     columns_count++;
 }
 
-// std::string *Table::find(size_t columnIndex, const std::string &value)
-// {
-//     // TODO
-// }
-
 void Table::insertRow(const std::vector<std::string> &values)
 {
     for (size_t i = 0; i < getColumns(); i++)
@@ -91,6 +73,14 @@ void Table::insertRow(const std::vector<std::string> &values)
         }
     }
     rows_count++;
+}
+
+Column *Table::operator[](size_t index)
+{
+    if(index < 0 || index > columns.size()-1) {
+        throw std::runtime_error("Invalid index!");
+    }
+    return columns[index];
 }
 
 void Table::rename(const std::string &_name)

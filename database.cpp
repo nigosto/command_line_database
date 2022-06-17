@@ -19,13 +19,6 @@ void Database::import(const std::string &filename)
     Table table(filename);
     table.deserialize();
 
-    // std::vector<Table>::iterator result = std::find_if(std::begin(tables), std::end(tables), [table](const Table &t)
-    //                                                    { return t.getName() == table.getName(); });
-    // if (result != std::end(tables))
-    // {
-    //     throw std::runtime_error("A table with this name already exists!");
-    // }
-
     for (size_t i = 0; i < tables.size(); i++)
     {
         if (tables[i].getName() == table.getName())
@@ -71,11 +64,11 @@ std::istream &Database::deserialize(std::istream &is)
     return is;
 }
 
-void Database::printTableNames() noexcept
+const Table &Database::operator[](size_t index) const
 {
-    std::cout << "List of all tables: \n";
-    for (size_t i = 0; i < tables.size(); i++)
+    if (index < 0 || index > tables.size() - 1)
     {
-        std::cout << i + 1 << ") " << tables[i].getName() << '\n';
+        throw std::runtime_error("Invalid index!");
     }
+    return tables[index];
 }

@@ -3,9 +3,11 @@
 
 #include <string>
 #include <vector>
-#include "serializeableExplicitly.hpp"
+#include <exception>
+#include <stdexcept>
+#include "serializeable.hpp"
 
-class Column : public ISerializeableExplicitly
+class Column : public ISerializeable
 {
 private:
     std::string name;
@@ -21,7 +23,7 @@ public:
     const std::string& getName() const {return name;}
     size_t size() const { return values.size(); }
     std::string &operator[](size_t index) { return values[index]; }
-    const std::string &operator[](size_t index) const { return values[index]; }
+    const std::string &operator[](size_t index) const;
     std::ostream &serialize(std::ostream &os = std::cout) const override;
     std::istream &deserialize(std::istream &is = std::cin) override;
     void remove(size_t index);

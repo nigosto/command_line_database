@@ -8,12 +8,13 @@ private:
     Database database;
     std::string file;
     bool isOpened;
-    size_t stringToInt(const std::string& str) const;
+
     void open(const std::string& filename);
     void help() const noexcept;
     void save();
     void saveas(const std::string& filename);
     void close();
+    void showtables() const;
     void describe(const std::string& name);
     void print(const std::string& name);
     void exportTable(const std::string& name, const std::string& filename);

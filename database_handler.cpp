@@ -4,20 +4,10 @@
 #include <iomanip>
 #include <limits>
 #include <algorithm>
+#include "stringManipulator.hpp"
 #include "intColumn.hpp"
 #include "doubleColumn.hpp"
 #include "database_handler.hpp"
-
-size_t DatabaseHandler::stringToInt(const std::string &str) const
-{
-    size_t result = 0;
-    for (size_t i = 0; i < str.size(); i++)
-    {
-        result *= 10;
-        result += str[i] - '0';
-    }
-    return result;
-}
 
 DatabaseHandler::DatabaseHandler() : isOpened(false) {}
 
@@ -30,21 +20,29 @@ void DatabaseHandler::readCommands()
         std::getline(std::cin, command);
         std::string space_delimiter = " ";
         std::vector<std::string> parameters{};
+        command = StringManipulator::trimRight(StringManipulator::trimLeft(command));
 
-        size_t pos = 0;
-        while ((pos = command.find(space_delimiter)) != std::string::npos)
+        size_t pos = command.find(space_delimiter);
+        while (pos != std::string::npos)
         {
             parameters.push_back(command.substr(0, pos));
             command.erase(0, pos + space_delimiter.length());
+            command = StringManipulator::trimLeft(command);
+            pos = command.find(space_delimiter);
         }
         parameters.push_back(command);
         command = parameters[0];
+        StringManipulator::toLowerCase(command);
         parameters.erase(std::begin(parameters));
 
         if (command == "open" && !isOpened)
         {
             try
             {
+                if (parameters.size() != 1)
+                {
+                    throw std::runtime_error("Invalid number of parameters!");
+                }
                 open(parameters[0]);
             }
             catch (const std::exception &e)
@@ -58,34 +56,55 @@ void DatabaseHandler::readCommands()
         }
         else if (command == "help")
         {
-            help();
+            try
+            {
+                if (parameters.size() != 0)
+                {
+                    throw std::runtime_error("Invalid number of parameters!");
+                }
+                help();
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << e.what() << '\n';
+            }
         }
         else if (command == "save" && isOpened)
         {
             try
             {
+                if (parameters.size() != 0)
+                {
+                    throw std::runtime_error("Invalid number of parameters!");
+                }
                 save();
             }
             catch (const std::exception &e)
             {
                 std::cerr << e.what() << '\n';
-                throw;
             }
         }
         else if (command == "saveas" && isOpened)
         {
             try
             {
+                if (parameters.size() != 1)
+                {
+                    throw std::runtime_error("Invalid number of parameters!");
+                }
                 saveas(parameters[0]);
             }
             catch (const std::exception &e)
             {
                 std::cerr << e.what() << '\n';
-                throw;
             }
         }
         else if (command == "close" && isOpened)
         {
+            if (parameters.size() != 0)
+            {
+                throw std::runtime_error("Invalid number of parameters!");
+            }
             close();
         }
         else if (command == "exit" && isOpened)
@@ -97,6 +116,10 @@ void DatabaseHandler::readCommands()
         {
             try
             {
+                if (parameters.size() != 1)
+                {
+                    throw std::runtime_error("Invalid number of parameters!");
+                }
                 database.import(parameters[0]);
                 std::cout << "Table successfully imported to database!\n";
             }
@@ -107,20 +130,57 @@ void DatabaseHandler::readCommands()
         }
         else if (command == "showtables" && isOpened)
         {
-            database.printTableNames();
+            try
+            {
+                if (parameters.size() != 0)
+                {
+                    throw std::runtime_error("Invalid number of parameters!");
+                }
+                showtables();
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << e.what() << '\n';
+            }
         }
         else if (command == "describe" && isOpened)
         {
-            describe(parameters[0]);
+            try
+            {
+                if (parameters.size() != 1)
+                {
+                    throw std::runtime_error("Invalid number of parameters!");
+                }
+                describe(parameters[0]);
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << e.what() << '\n';
+            }
         }
         else if (command == "print" && isOpened)
         {
-            print(parameters[0]);
+            try
+            {
+                if (parameters.size() != 1)
+                {
+                    throw std::runtime_error("Invalid number of parameters!");
+                }
+                print(parameters[0]);
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << e.what() << '\n';
+            }
         }
         else if (command == "export" && isOpened)
         {
             try
             {
+                if (parameters.size() != 2)
+                {
+                    throw std::runtime_error("Invalid number of parameters!");
+                }
                 exportTable(parameters[0], parameters[1]);
             }
             catch (const std::exception &e)
@@ -130,10 +190,14 @@ void DatabaseHandler::readCommands()
         }
         else if (command == "select" && isOpened)
         {
-            size_t column = stringToInt(parameters[0]);
-
             try
             {
+                if (parameters.size() != 3)
+                {
+                    throw std::runtime_error("Invalid number of parameters!");
+                }
+                size_t column = StringManipulator::stringToInt(parameters[0]);
+
                 select(column, parameters[1], parameters[2]);
             }
             catch (const std::exception &e)
@@ -145,6 +209,10 @@ void DatabaseHandler::readCommands()
         {
             try
             {
+                if (parameters.size() != 3)
+                {
+                    throw std::runtime_error("Invalid number of parameters!");
+                }
                 addcolumn(parameters[0], parameters[1], parameters[2]);
             }
             catch (const std::exception &e)
@@ -154,10 +222,14 @@ void DatabaseHandler::readCommands()
         }
         else if (command == "update" && isOpened)
         {
-            size_t searchColumn = stringToInt(parameters[1]);
-            size_t targetColumn = stringToInt(parameters[3]);
             try
             {
+                if (parameters.size() != 5)
+                {
+                    throw std::runtime_error("Invalid number of parameters!");
+                }
+                size_t searchColumn = StringManipulator::stringToInt(parameters[1]);
+                size_t targetColumn = StringManipulator::stringToInt(parameters[3]);
                 update(parameters[0], searchColumn, parameters[2], targetColumn, parameters[4]);
             }
             catch (const std::exception &e)
@@ -167,9 +239,13 @@ void DatabaseHandler::readCommands()
         }
         else if (command == "delete" && isOpened)
         {
-            size_t column = stringToInt(parameters[1]);
             try
             {
+                if (parameters.size() != 3)
+                {
+                    throw std::runtime_error("Invalid number of parameters!");
+                }
+                size_t column = StringManipulator::stringToInt(parameters[1]);
                 deleteRows(parameters[0], column, parameters[2]);
             }
             catch (const std::exception &e)
@@ -181,6 +257,10 @@ void DatabaseHandler::readCommands()
         {
             try
             {
+                if (parameters.size() < 1)
+                {
+                    throw std::runtime_error("Invalid number of parameters!");
+                }
                 insert(parameters);
             }
             catch (const std::exception &e)
@@ -192,8 +272,12 @@ void DatabaseHandler::readCommands()
         {
             try
             {
-                size_t column1 = stringToInt(parameters[1]);
-                size_t column2 = stringToInt(parameters[3]);
+                if (parameters.size() != 4)
+                {
+                    throw std::runtime_error("Invalid number of parameters!");
+                }
+                size_t column1 = StringManipulator::stringToInt(parameters[1]);
+                size_t column2 = StringManipulator::stringToInt(parameters[3]);
                 innerjoin(parameters[0], column1, parameters[2], column2);
             }
             catch (const std::exception &e)
@@ -203,19 +287,45 @@ void DatabaseHandler::readCommands()
         }
         else if (command == "rename" && isOpened)
         {
-            rename(parameters[0], parameters[1]);
+            try
+            {
+                if (parameters.size() != 2)
+                {
+                    throw std::runtime_error("Invalid number of parameters!");
+                }
+                rename(parameters[0], parameters[1]);
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << e.what() << '\n';
+            }
         }
         else if (command == "count" && isOpened)
         {
-            size_t column = stringToInt(parameters[1]);
-            count(parameters[0], column, parameters[2]);
+            try
+            {
+                if (parameters.size() != 3)
+                {
+                    throw std::runtime_error("Invalid number of parameters!");
+                }
+                size_t column = StringManipulator::stringToInt(parameters[1]);
+                count(parameters[0], column, parameters[2]);
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << e.what() << '\n';
+            }
         }
         else if (command == "aggregate" && isOpened)
         {
             try
             {
-                size_t searchColumn = stringToInt(parameters[1]);
-                size_t targetColumn = stringToInt(parameters[3]);
+                if (parameters.size() != 5)
+                {
+                    throw std::runtime_error("Invalid number of parameters!");
+                }
+                size_t searchColumn = StringManipulator::stringToInt(parameters[1]);
+                size_t targetColumn = StringManipulator::stringToInt(parameters[3]);
                 aggregate(parameters[0], searchColumn, parameters[2], targetColumn, parameters[4]);
             }
             catch (const std::exception &e)
@@ -350,6 +460,15 @@ void DatabaseHandler::close()
     database = Database();
 }
 
+void DatabaseHandler::showtables() const
+{
+    std::cout << "List of all tables: \n";
+    for (size_t i = 0; i < database.size(); i++)
+    {
+        std::cout << i + 1 << ") " << database[i].getName() << '\n';
+    }
+}
+
 void DatabaseHandler::describe(const std::string &name)
 {
     Table *table = database.find(name);
@@ -373,13 +492,12 @@ void DatabaseHandler::print(const std::string &name)
     if (table != nullptr)
     {
         std::cout << "\nYou are currently in visualization mode! Available commands: \n";
-        std::cout << std::setw(90) << std::left << "next"
+        std::cout << std::setw(20) << std::left << "next"
                   << "Shows the next 10 rows of the table" << std::endl;
-        std::cout << std::setw(90) << std::left << "previous"
+        std::cout << std::setw(20) << std::left << "previous"
                   << "Shows the previous 10 rows of the table" << std::endl;
-        std::cout << std::setw(90) << std::left << "exit"
+        std::cout << std::setw(20) << std::left << "exit"
                   << "Exits the visualization mode" << std::endl;
-        std::cout << '\n';
 
         size_t pages = table->getRows() / 10;
         if (table->getRows() % 10 > 0)
@@ -388,7 +506,7 @@ void DatabaseHandler::print(const std::string &name)
         }
 
         size_t currentPage = 1;
-        std::cout << "Current page: 1\n";
+        std::cout << "\nCurrent page: 1\n";
 
         for (size_t i = 0; i < table->getColumns(); i++)
         {
@@ -403,25 +521,29 @@ void DatabaseHandler::print(const std::string &name)
             }
             std::cout << '\n';
         }
+        std::cout << '\n';
 
         std::string command;
         do
         {
             std::cout << "> ";
             std::getline(std::cin, command);
+            command = StringManipulator::trimRight(StringManipulator::trimLeft(command));
+            StringManipulator::toLowerCase(command);
+
             if (command == "next")
             {
                 if (pages > currentPage)
                 {
                     currentPage++;
-                    std::cout << "Current page: " << currentPage << "\n";
+                    std::cout << "\nCurrent page: " << currentPage << "\n";
 
                     for (size_t i = 0; i < table->getColumns(); i++)
                     {
                         std::cout << std::setw(20) << std::left << (*table)[i]->getName() << ' ';
                     }
                     std::cout << '\n';
-                    for (size_t i = (currentPage-1)*10; i < std::min(table->getRows(), currentPage * 10); i++)
+                    for (size_t i = (currentPage - 1) * 10; i < std::min(table->getRows(), currentPage * 10); i++)
                     {
                         for (size_t j = 0; j < table->getColumns(); j++)
                         {
@@ -429,6 +551,7 @@ void DatabaseHandler::print(const std::string &name)
                         }
                         std::cout << '\n';
                     }
+                    std::cout << '\n';
                 }
                 else
                 {
@@ -440,14 +563,14 @@ void DatabaseHandler::print(const std::string &name)
                 if (currentPage > 1)
                 {
                     currentPage--;
-                    std::cout << "Current page: " << currentPage << "\n";
+                    std::cout << "\nCurrent page: " << currentPage << "\n";
 
                     for (size_t i = 0; i < table->getColumns(); i++)
                     {
                         std::cout << std::setw(20) << std::left << (*table)[i]->getName() << ' ';
                     }
                     std::cout << '\n';
-                    for (size_t i = (currentPage-1)*10; i < currentPage * 10; i++)
+                    for (size_t i = (currentPage - 1) * 10; i < currentPage * 10; i++)
                     {
                         for (size_t j = 0; j < table->getColumns(); j++)
                         {
@@ -455,6 +578,7 @@ void DatabaseHandler::print(const std::string &name)
                         }
                         std::cout << '\n';
                     }
+                    std::cout << '\n';
                 }
                 else
                 {
@@ -464,16 +588,15 @@ void DatabaseHandler::print(const std::string &name)
             else if (command == "exit")
             {
                 std::cout << "Exiting visualization mode...\n";
-
             }
             else
             {
                 std::cout << "Invalid command! Available commands: \n";
-                std::cout << std::setw(90) << std::left << "next"
+                std::cout << std::setw(20) << std::left << "next"
                           << "Shows the next 10 rows of the table" << std::endl;
-                std::cout << std::setw(90) << std::left << "previous"
+                std::cout << std::setw(20) << std::left << "previous"
                           << "Shows the previous 10 rows of the table" << std::endl;
-                std::cout << std::setw(90) << std::left << "exit"
+                std::cout << std::setw(20) << std::left << "exit"
                           << "Exits the visualization mode" << std::endl;
             }
         } while (command != "exit");
@@ -505,17 +628,121 @@ void DatabaseHandler::select(size_t column, const std::string &value, const std:
     Table *searchTable = database.find(table);
     if (searchTable != nullptr)
     {
+        std::vector<size_t> indexes;
         for (size_t i = 0; i < (*searchTable)[column - 1]->size(); i++)
         {
             if ((*(*searchTable)[column - 1])[i] == value)
             {
-                for (size_t j = 0; j < searchTable->getColumns(); j++)
-                {
-                    std::cout << std::setw(20) << std::left << (*(*searchTable)[j])[i] << ' ';
-                }
-                std::cout << '\n';
+                indexes.push_back(i);
             }
         }
+
+        std::cout << "\nYou are currently in visualization mode! Available commands: \n";
+        std::cout << std::setw(20) << std::left << "next"
+                  << "Shows the next 10 rows of the table" << std::endl;
+        std::cout << std::setw(20) << std::left << "previous"
+                  << "Shows the previous 10 rows of the table" << std::endl;
+        std::cout << std::setw(20) << std::left << "exit"
+                  << "Exits the visualization mode" << std::endl;
+
+        size_t pages = indexes.size() / 10;
+        pages += (indexes.size() % 10 != 0);
+        size_t currentPage = 1;
+
+        std::cout << "\nCurrent page: 1\n";
+
+        for (size_t i = 0; i < searchTable->getColumns(); i++)
+        {
+            std::cout << std::setw(20) << std::left << (*searchTable)[i]->getName() << ' ';
+        }
+        std::cout << '\n';
+        for (size_t i = 0; i < std::min(indexes.size(), currentPage * 10); i++)
+        {
+            for (size_t j = 0; j < searchTable->getColumns(); j++)
+            {
+                std::cout << std::setw(20) << std::left << (*(*searchTable)[j])[indexes[i]] << ' ';
+            }
+            std::cout << '\n';
+        }
+        std::cout << '\n';
+
+        std::string command;
+        do
+        {
+            std::cout << "> ";
+            std::getline(std::cin, command);
+            command = StringManipulator::trimRight(StringManipulator::trimLeft(command));
+            StringManipulator::toLowerCase(command);
+
+            if (command == "next")
+            {
+                if (pages > currentPage)
+                {
+                    currentPage++;
+                    std::cout << "\nCurrent page: " << currentPage << "\n";
+
+                    for (size_t i = 0; i < searchTable->getColumns(); i++)
+                    {
+                        std::cout << std::setw(20) << std::left << (*searchTable)[i]->getName() << ' ';
+                    }
+                    std::cout << '\n';
+                    for (size_t i = (currentPage - 1) * 10; i < std::min(indexes.size(), currentPage * 10); i++)
+                    {
+                        for (size_t j = 0; j < searchTable->getColumns(); j++)
+                        {
+                            std::cout << std::setw(20) << std::left << (*(*searchTable)[j])[indexes[i]] << ' ';
+                        }
+                        std::cout << '\n';
+                    }
+                    std::cout << '\n';
+                }
+                else
+                {
+                    std::cout << "No more pages!\n";
+                }
+            }
+            else if (command == "previous")
+            {
+                if (currentPage > 1)
+                {
+                    currentPage--;
+                    std::cout << "\nCurrent page: " << currentPage << "\n";
+
+                    for (size_t i = 0; i < searchTable->getColumns(); i++)
+                    {
+                        std::cout << std::setw(20) << std::left << (*searchTable)[i]->getName() << ' ';
+                    }
+                    std::cout << '\n';
+                    for (size_t i = (currentPage - 1) * 10; i < currentPage * 10; i++)
+                    {
+                        for (size_t j = 0; j < searchTable->getColumns(); j++)
+                        {
+                            std::cout << std::setw(20) << std::left << (*(*searchTable)[j])[indexes[i]] << ' ';
+                        }
+                        std::cout << '\n';
+                    }
+                    std::cout << '\n';
+                }
+                else
+                {
+                    std::cout << "There are no previous pages!\n";
+                }
+            }
+            else if (command == "exit")
+            {
+                std::cout << "Exiting visualization mode...\n";
+            }
+            else
+            {
+                std::cout << "Invalid command! Available commands: \n";
+                std::cout << std::setw(20) << std::left << "next"
+                          << "Shows the next 10 rows of the table" << std::endl;
+                std::cout << std::setw(20) << std::left << "previous"
+                          << "Shows the previous 10 rows of the table" << std::endl;
+                std::cout << std::setw(20) << std::left << "exit"
+                          << "Exits the visualization mode" << std::endl;
+            }
+        } while (command != "exit");
     }
     else
     {
@@ -583,6 +810,10 @@ void DatabaseHandler::insert(const std::vector<std::string> &parameters)
     Table *table = database.find(parameters[0]);
     if (table != nullptr)
     {
+        if (parameters.size() - 1 > table->getColumns())
+        {
+            throw std::runtime_error("Invalid number of parameters!");
+        }
         std::vector<std::string> values(parameters);
         values.erase(std::begin(values));
         table->insertRow(values);

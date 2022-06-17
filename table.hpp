@@ -2,9 +2,8 @@
 #define __TABLE_HPP
 
 #include "column.hpp"
-#include "serializeableImplicitly.hpp"
 
-class Table : public ISerializeableImplicitly
+class Table
 {
 private:
     std::vector<Column *> columns;
@@ -15,24 +14,20 @@ private:
 
 public:
     Table(const std::string &_filename="", const std::string &_name = "");
-    //Table(std::string &&_filename, std::string &&_name);
     Table(const Table &other);
-    //Table(Table &&other);
     ~Table();
     Table &operator=(const Table &other);
-    //Table &operator=(Table &&other);
     void swap(Table &other);
     void addColumn(const std::string &_name, const std::string &_type);
-    //std::string *find(size_t columnIndex, const std::string &value);
     void insertRow(const std::vector<std::string>& values);
     void rename(const std::string &_name);
-    void serialize() const final;
-    void deserialize() final;
+    void serialize() const;
+    void deserialize();
     const std::string& getName() const {return name;}
     const std::string& getFilename() const {return filename;}
     size_t getRows() const { return rows_count; }
     size_t getColumns() const {return columns_count;}
-    Column* operator[](size_t index) {return columns[index];}
+    Column* operator[](size_t index);
     void changeFilename(const std::string& file) { filename = file; }
     void remove(size_t rowIndex);
     friend Table innerJoin(const Table& first, size_t firstColumn, const Table& second, size_t secondColumn);

@@ -59,6 +59,9 @@ std::istream &Database::deserialize(std::istream &is)
             Table t(filename, name);
             tables.push_back(t);
             tables[i].deserialize();
+            if(tables[i].getFilename().find("recovery-") != std::string::npos) {
+                tables[i].changeFilename(filename.erase(0, 9));
+            }
         }
     }
     return is;
@@ -71,4 +74,15 @@ const Table &Database::operator[](size_t index) const
         throw std::runtime_error("Invalid index!");
     }
     return tables[index];
+}
+
+std::ostream &Database::serializeWithRecovery(std::ostream &os) const
+{
+    os << tables.size() << '\n';
+    for (size_t i = 0; i < tables.size(); i++)
+    {
+        os << tables[i].getName() << '\n'
+           << "recovery-" + tables[i].getFilename() << '\n';
+    }
+    return os;
 }

@@ -44,18 +44,7 @@ void Table::swap(Table &other)
 
 void Table::addColumn(const std::string &_name, const std::string &_type)
 {
-    if (_type == "integer")
-    {
-        columns.push_back(new IntColumn(_name, rows_count));
-    }
-    else if (_type == "double")
-    {
-        columns.push_back(new DoubleColumn(_name, rows_count));
-    }
-    else if (_type == "string")
-    {
-        columns.push_back(new StringColumn(_name, rows_count));
-    }
+    columns.push_back(Column::createColumn(_type, _name, rows_count));
     columns_count++;
 }
 
@@ -77,7 +66,8 @@ void Table::insertRow(const std::vector<std::string> &values)
 
 Column *Table::operator[](size_t index)
 {
-    if(index < 0 || index > columns.size()-1) {
+    if (index < 0 || index > columns.size() - 1)
+    {
         throw std::runtime_error("Invalid index!");
     }
     return columns[index];
@@ -88,11 +78,21 @@ void Table::rename(const std::string &_name)
     name = _name;
 }
 
-void Table::serialize() const
+void Table::serialize(bool recovery) const
 {
-    std::ofstream os{
-        filename,
-        std::ios::out};
+    std::ofstream os;
+    if (recovery)
+    {
+        os = std::ofstream{
+            "recovery-" + filename,
+            std::ios::out};
+    }
+    else
+    {
+        os = std::ofstream{
+            filename,
+            std::ios::out};
+    }
 
     os << name << '\n'
        << columns_count << '\n'
@@ -104,11 +104,22 @@ void Table::serialize() const
     os.close();
 }
 
-void Table::deserialize()
+void Table::deserialize(bool recovery)
 {
-    std::ifstream is{
-        filename,
-        std::ios::out};
+    std::ifstream is;
+    if (recovery)
+    {
+        is = std::ifstream{
+            "recovery-" + filename,
+            std::ios::in};
+    }
+    else
+    {
+        is = std::ifstream{
+            filename,
+            std::ios::in};
+    }
+
     std::string _name;
     std::getline(is, _name);
     name = _name;
@@ -122,21 +133,8 @@ void Table::deserialize()
     {
         std::string type;
         std::getline(is, type);
-        if (type == "integer")
-        {
-            columns.push_back(new IntColumn());
-            columns[i]->deserialize(is);
-        }
-        else if (type == "double")
-        {
-            columns.push_back(new DoubleColumn());
-            columns[i]->deserialize(is);
-        }
-        else if (type == "string")
-        {
-            columns.push_back(new StringColumn());
-            columns[i]->deserialize(is);
-        }
+        columns.push_back(Column::createColumn(type));
+        columns[i]->deserialize(is);
     }
     is.close();
 }

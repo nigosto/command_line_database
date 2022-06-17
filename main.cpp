@@ -9,8 +9,7 @@
 
 int main()
 {
-    DatabaseHandler db_handler;
-    db_handler.readCommands();
+    DatabaseHandler::getInstance().readCommands();
 
     return 0;
 }

@@ -13,24 +13,24 @@ private:
     size_t columns_count;
 
 public:
-    Table(const std::string &_filename="", const std::string &_name = "");
+    Table(const std::string &_filename = "", const std::string &_name = "");
     Table(const Table &other);
     ~Table();
     Table &operator=(const Table &other);
     void swap(Table &other);
     void addColumn(const std::string &_name, const std::string &_type);
-    void insertRow(const std::vector<std::string>& values);
+    void insertRow(const std::vector<std::string> &values);
     void rename(const std::string &_name);
-    void serialize() const;
-    void deserialize();
-    const std::string& getName() const {return name;}
-    const std::string& getFilename() const {return filename;}
+    void serialize(bool recovery = false) const;
+    void deserialize(bool recovery = false);
+    const std::string &getName() const { return name; }
+    const std::string &getFilename() const { return filename; }
     size_t getRows() const { return rows_count; }
-    size_t getColumns() const {return columns_count;}
-    Column* operator[](size_t index);
-    void changeFilename(const std::string& file) { filename = file; }
+    size_t getColumns() const { return columns_count; }
+    Column *operator[](size_t index);
+    void changeFilename(const std::string &file) { filename = file; }
     void remove(size_t rowIndex);
-    friend Table innerJoin(const Table& first, size_t firstColumn, const Table& second, size_t secondColumn);
+    friend Table innerJoin(const Table &first, size_t firstColumn, const Table &second, size_t secondColumn);
 };
 
 #endif

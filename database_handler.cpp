@@ -4,10 +4,39 @@
 #include <iomanip>
 #include <limits>
 #include <algorithm>
+#include <cstdio>
 #include "stringManipulator.hpp"
 #include "intColumn.hpp"
 #include "doubleColumn.hpp"
 #include "database_handler.hpp"
+
+void DatabaseHandler::saveTo(const std::string &filename)
+{
+    std::ofstream os{
+        filename,
+        std::ios::out};
+
+    if (!os)
+    {
+        throw std::runtime_error("Couldn't save file!");
+    }
+
+    if (filename == "recovery.txt")
+    {
+        database.serializeWithRecovery(os);
+    }
+    else
+    {
+        database.serialize(os);
+    }
+    os.close();
+}
+
+DatabaseHandler &DatabaseHandler::getInstance()
+{
+    static DatabaseHandler instance;
+    return instance;
+}
 
 DatabaseHandler::DatabaseHandler() : isOpened(false) {}
 
@@ -353,6 +382,27 @@ void DatabaseHandler::readCommands()
 
 void DatabaseHandler::open(const std::string &filename)
 {
+    std::ifstream recovery{
+        "recovery.txt",
+        std::ios::in};
+
+    if (recovery)
+    {
+        std::cout << "Looks like the program didn't close properly last time. There is a recovery file, containing all the changes made before. \nWould you like to open the recovery file instead? (y/n): ";
+        char c;
+        std::cin >> c;
+        std::cin.ignore();
+        if (c == 'y' || c == 'Y')
+        {
+            database.deserialize(recovery);
+            recovery.close();
+            isOpened = true;
+            file = filename;
+            std::cout << "Successfully opened recovery file. New changes will be saved in: " << filename << '\n';
+            return;
+        }
+    }
+
     std::ifstream is{
         filename,
         std::ios::in};
@@ -367,6 +417,11 @@ void DatabaseHandler::open(const std::string &filename)
     isOpened = true;
     file = filename;
     std::cout << "Successfully opened " << filename << '\n';
+
+    for (size_t i = 0; i < database.size(); i++)
+    {
+        database[i].serialize(true);
+    }
 }
 
 void DatabaseHandler::help() const noexcept
@@ -416,17 +471,13 @@ void DatabaseHandler::help() const noexcept
 
 void DatabaseHandler::save()
 {
-    std::ofstream os{
-        file,
-        std::ios::out};
-
-    if (!os)
+    saveTo(file);
+    std::remove("recovery.txt");
+    for (size_t i = 0; i < database.size(); i++)
     {
-        throw std::runtime_error("Couldn't save the file!");
+        std::string s = ("recovery-" + database[i].getFilename());
+        std::remove(s.c_str());
     }
-
-    database.serialize(os);
-    os.close();
     isOpened = false;
     std::cout << "Successfully saved " << file << '\n';
     file = "";
@@ -435,17 +486,14 @@ void DatabaseHandler::save()
 
 void DatabaseHandler::saveas(const std::string &filename)
 {
-    std::ofstream os{
-        filename,
-        std::ios::out};
-
-    if (!os)
+    saveTo(filename);
+    std::remove("recovery.txt");
+    for (size_t i = 0; i < database.size(); i++)
     {
-        throw std::runtime_error("Couldn't save the file!");
+        std::string s = ("recovery-" + database[i].getFilename());
+        std::remove(s.c_str());
     }
 
-    database.serialize(os);
-    os.close();
     isOpened = false;
     std::cout << "Successfully saved another " << filename << '\n';
     file = "";
@@ -454,6 +502,13 @@ void DatabaseHandler::saveas(const std::string &filename)
 
 void DatabaseHandler::close()
 {
+    std::remove("recovery.txt");
+    for (size_t i = 0; i < database.size(); i++)
+    {
+        std::string s = ("recovery-" + database[i].getFilename());
+        std::remove(s.c_str());
+    }
+
     isOpened = false;
     std::cout << "Successfully closed " << file << '\n';
     file = "";
@@ -756,6 +811,8 @@ void DatabaseHandler::addcolumn(const std::string &table, const std::string &col
     if (searchTable != nullptr)
     {
         searchTable->addColumn(column, type);
+        searchTable->serialize(true);
+        saveTo("recovery.txt");
         std::cout << "Column " << column << " added successfully to table " << table << '\n';
     }
     else
@@ -776,6 +833,8 @@ void DatabaseHandler::update(const std::string &table, size_t searchColumn, cons
                 (*(*searchTable)[targetColumn - 1])[i] = targetValue;
             }
         }
+        searchTable->serialize(true);
+        saveTo("recovery.txt");
         std::cout << "Table " << table << " successfully updated!\n";
     }
     else
@@ -797,6 +856,9 @@ void DatabaseHandler::deleteRows(const std::string &table, size_t column, const 
                 i--;
             }
         }
+
+        searchTable->serialize(true);
+        saveTo("recovery.txt");
         std::cout << "Rows deleted successfully!\n";
     }
     else
@@ -817,6 +879,9 @@ void DatabaseHandler::insert(const std::vector<std::string> &parameters)
         std::vector<std::string> values(parameters);
         values.erase(std::begin(values));
         table->insertRow(values);
+
+        table->serialize(true);
+        saveTo("recovery.txt");
         std::cout << "Row inserted successfully!\n";
     }
     else
@@ -834,6 +899,9 @@ void DatabaseHandler::innerjoin(const std::string &table1, size_t column1, const
         Table result = innerJoin(*firstTable, column1 - 1, *secondTable, column2 - 1);
         result.serialize();
         database.import(result.getFilename());
+
+        result.serialize(true);
+        saveTo("recovery.txt");
         std::cout << "Successfully joined tables " << firstTable->getName() << " and " << secondTable->getName() << " into " << result.getName() << "!\n";
     }
     else
@@ -854,6 +922,9 @@ void DatabaseHandler::rename(const std::string &oldName, const std::string &newN
         else
         {
             table->rename(newName);
+
+            table->serialize(true);
+            saveTo("recovery.txt");
             std::cout << "Table "
                       << "\"" << oldName << "\" "
                       << "renamed to "

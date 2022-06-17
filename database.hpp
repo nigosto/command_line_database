@@ -14,6 +14,9 @@ public:
     void import(const std::string& filename);
     std::ostream &serialize(std::ostream &os = std::cout) const final;
     std::istream &deserialize(std::istream &is = std::cin) final;
+
+    std::ostream &serializeWithRecovery(std::ostream &os = std::cout) const;
+
     size_t size() const {return tables.size(); }
     const Table& operator[](size_t index) const;
 };

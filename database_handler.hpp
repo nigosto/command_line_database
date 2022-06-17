@@ -9,6 +9,9 @@ private:
     std::string file;
     bool isOpened;
 
+    DatabaseHandler();
+    void saveTo(const std::string& filename);
+
     void open(const std::string& filename);
     void help() const noexcept;
     void save();
@@ -28,8 +31,11 @@ private:
     void innerjoin(const std::string& table1, size_t column1, const std::string& table2, size_t column2);
     void aggregate(const std::string& table, size_t searchColumn, const std::string& searchValue, size_t targetColumn, const std::string& operation);
 public:
-    DatabaseHandler();
+    static DatabaseHandler& getInstance();
     void readCommands();
+
+    DatabaseHandler(const DatabaseHandler&) = delete;
+    DatabaseHandler& operator=(const DatabaseHandler&) = delete;
 };
 
 #endif

@@ -1,3 +1,6 @@
+#include "intColumn.hpp"
+#include "doubleColumn.hpp"
+#include "stringColumn.hpp"
 #include "column.hpp"
 
 Column::Column(const std::string &_name, size_t cells) : values(cells), name(_name)
@@ -18,7 +21,8 @@ void Column::push_back(const std::string &value)
 
 const std::string &Column::operator[](size_t index) const
 {
-    if(index < 0 || index > values.size()-1) {
+    if (index < 0 || index > values.size() - 1)
+    {
         throw std::runtime_error("Invalid index!");
     }
 
@@ -57,4 +61,20 @@ std::istream &Column::deserialize(std::istream &is)
 void Column::remove(size_t index)
 {
     values.erase(std::begin(values) + index);
+}
+
+Column *Column::createColumn(const std::string &_type, const std::string& _name, size_t _cells)
+{
+    if(_type == "integer") {
+        return new IntColumn(_name, _cells);
+    }
+    else if(_type == "double") {
+        return new DoubleColumn(_name, _cells);
+    }
+    else if(_type == "string") {
+        return new StringColumn(_name, _cells);
+    }
+    else {
+        return nullptr;
+    }
 }

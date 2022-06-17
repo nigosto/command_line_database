@@ -36,24 +36,6 @@ public:
     void changeFilename(const std::string& file) { filename = file; }
     void remove(size_t rowIndex);
     friend Table innerJoin(const Table& first, size_t firstColumn, const Table& second, size_t secondColumn);
-
-    //using during development only
-    void print() const {
-        for (size_t i = 0; i < columns_count; i++)
-        {
-            std::cout<<columns[i]->getName()<< ' ';
-        }
-        std::cout<<'\n';
-        for (size_t i = 0; i < rows_count; i++)
-        {
-            for (size_t j = 0; j < columns_count; j++)
-            {
-                std::cout<<(*columns[j])[i]<< ' ';
-            }
-            std::cout<<'\n';
-        }
-        
-    }
 };
 
 #endif

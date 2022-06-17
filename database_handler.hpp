@@ -25,10 +25,10 @@ private:
     void rename(const std::string& oldName, const std::string& newName);
     void count(const std::string& table, size_t column, const std::string& value);
     void innerjoin(const std::string& table1, size_t column1, const std::string& table2, size_t column2);
+    void aggregate(const std::string& table, size_t searchColumn, const std::string& searchValue, size_t targetColumn, const std::string& operation);
 public:
     DatabaseHandler();
     void readCommands();
-    //TODO
 };
 
 #endif

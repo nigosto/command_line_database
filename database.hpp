@@ -15,14 +15,6 @@ public:
     std::ostream &serialize(std::ostream &os = std::cout) const final;
     std::istream &deserialize(std::istream &is = std::cin) final;
 
-    //using during development only
-    void print() const {
-        for (auto &&i : tables)
-        {
-            i.print();
-        }   
-    }
-
     void printTableNames() noexcept;
 };
 

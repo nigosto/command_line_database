@@ -2,6 +2,10 @@
 #include <exception>
 #include <stdexcept>
 #include <iomanip>
+#include <limits>
+#include <algorithm>
+#include "intColumn.hpp"
+#include "doubleColumn.hpp"
 #include "database_handler.hpp"
 
 size_t DatabaseHandler::stringToInt(const std::string &str) const
@@ -77,6 +81,7 @@ void DatabaseHandler::readCommands()
             catch (const std::exception &e)
             {
                 std::cerr << e.what() << '\n';
+                throw;
             }
         }
         else if (command == "close" && isOpened)
@@ -111,7 +116,6 @@ void DatabaseHandler::readCommands()
         else if (command == "print" && isOpened)
         {
             print(parameters[0]);
-            // TODO
         }
         else if (command == "export" && isOpened)
         {
@@ -188,15 +192,14 @@ void DatabaseHandler::readCommands()
         {
             try
             {
-                size_t column1 = stringToInt(parameters[1]);   
+                size_t column1 = stringToInt(parameters[1]);
                 size_t column2 = stringToInt(parameters[3]);
-                innerjoin(parameters[0], column1, parameters[2], column2);   
+                innerjoin(parameters[0], column1, parameters[2], column2);
             }
-            catch(const std::exception& e)
+            catch (const std::exception &e)
             {
                 std::cerr << e.what() << '\n';
             }
-            
         }
         else if (command == "rename" && isOpened)
         {
@@ -209,7 +212,16 @@ void DatabaseHandler::readCommands()
         }
         else if (command == "aggregate" && isOpened)
         {
-            // TODO
+            try
+            {
+                size_t searchColumn = stringToInt(parameters[1]);
+                size_t targetColumn = stringToInt(parameters[3]);
+                aggregate(parameters[0], searchColumn, parameters[2], targetColumn, parameters[4]);
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << e.what() << '\n';
+            }
         }
         else if (command == "count" || command == "rename" || command == "innerjoin" || command == "insert" || command == "delete" || command == "update" || command == "addcolumn" || command == "select" || command == "export" || command == "print" || command == "describe" || command == "showtables" || command == "import" || command == "close" || command == "saveas" || command == "save" || command == "aggregate" && !isOpened)
         {
@@ -360,12 +372,30 @@ void DatabaseHandler::print(const std::string &name)
     Table *table = database.find(name);
     if (table != nullptr)
     {
+        std::cout << "\nYou are currently in visualization mode! Available commands: \n";
+        std::cout << std::setw(90) << std::left << "next"
+                  << "Shows the next 10 rows of the table" << std::endl;
+        std::cout << std::setw(90) << std::left << "previous"
+                  << "Shows the previous 10 rows of the table" << std::endl;
+        std::cout << std::setw(90) << std::left << "exit"
+                  << "Exits the visualization mode" << std::endl;
+        std::cout << '\n';
+
+        size_t pages = table->getRows() / 10;
+        if (table->getRows() % 10 > 0)
+        {
+            pages++;
+        }
+
+        size_t currentPage = 1;
+        std::cout << "Current page: 1\n";
+
         for (size_t i = 0; i < table->getColumns(); i++)
         {
             std::cout << std::setw(20) << std::left << (*table)[i]->getName() << ' ';
         }
         std::cout << '\n';
-        for (size_t i = 0; i < table->getRows(); i++)
+        for (size_t i = 0; i < std::min(table->getRows(), currentPage * 10); i++)
         {
             for (size_t j = 0; j < table->getColumns(); j++)
             {
@@ -373,6 +403,80 @@ void DatabaseHandler::print(const std::string &name)
             }
             std::cout << '\n';
         }
+
+        std::string command;
+        do
+        {
+            std::cout << "> ";
+            std::getline(std::cin, command);
+            if (command == "next")
+            {
+                if (pages > currentPage)
+                {
+                    currentPage++;
+                    std::cout << "Current page: " << currentPage << "\n";
+
+                    for (size_t i = 0; i < table->getColumns(); i++)
+                    {
+                        std::cout << std::setw(20) << std::left << (*table)[i]->getName() << ' ';
+                    }
+                    std::cout << '\n';
+                    for (size_t i = (currentPage-1)*10; i < std::min(table->getRows(), currentPage * 10); i++)
+                    {
+                        for (size_t j = 0; j < table->getColumns(); j++)
+                        {
+                            std::cout << std::setw(20) << std::left << (*(*table)[j])[i] << ' ';
+                        }
+                        std::cout << '\n';
+                    }
+                }
+                else
+                {
+                    std::cout << "No more pages!\n";
+                }
+            }
+            else if (command == "previous")
+            {
+                if (currentPage > 1)
+                {
+                    currentPage--;
+                    std::cout << "Current page: " << currentPage << "\n";
+
+                    for (size_t i = 0; i < table->getColumns(); i++)
+                    {
+                        std::cout << std::setw(20) << std::left << (*table)[i]->getName() << ' ';
+                    }
+                    std::cout << '\n';
+                    for (size_t i = (currentPage-1)*10; i < currentPage * 10; i++)
+                    {
+                        for (size_t j = 0; j < table->getColumns(); j++)
+                        {
+                            std::cout << std::setw(20) << std::left << (*(*table)[j])[i] << ' ';
+                        }
+                        std::cout << '\n';
+                    }
+                }
+                else
+                {
+                    std::cout << "There are no previous pages!\n";
+                }
+            }
+            else if (command == "exit")
+            {
+                std::cout << "Exiting visualization mode...\n";
+
+            }
+            else
+            {
+                std::cout << "Invalid command! Available commands: \n";
+                std::cout << std::setw(90) << std::left << "next"
+                          << "Shows the next 10 rows of the table" << std::endl;
+                std::cout << std::setw(90) << std::left << "previous"
+                          << "Shows the previous 10 rows of the table" << std::endl;
+                std::cout << std::setw(90) << std::left << "exit"
+                          << "Exits the visualization mode" << std::endl;
+            }
+        } while (command != "exit");
     }
     else
     {
@@ -463,6 +567,7 @@ void DatabaseHandler::deleteRows(const std::string &table, size_t column, const 
             if ((*(*searchTable)[column - 1])[i] == value)
             {
                 searchTable->remove(i);
+                i--;
             }
         }
         std::cout << "Rows deleted successfully!\n";
@@ -491,16 +596,18 @@ void DatabaseHandler::insert(const std::vector<std::string> &parameters)
 
 void DatabaseHandler::innerjoin(const std::string &table1, size_t column1, const std::string &table2, size_t column2)
 {
-    Table* firstTable = database.find(table1);
-    Table* secondTable = database.find(table2); 
-    if(firstTable != nullptr && secondTable != nullptr) {
-        Table result = innerJoin(*firstTable, column1-1, *secondTable, column2-1);
+    Table *firstTable = database.find(table1);
+    Table *secondTable = database.find(table2);
+    if (firstTable != nullptr && secondTable != nullptr)
+    {
+        Table result = innerJoin(*firstTable, column1 - 1, *secondTable, column2 - 1);
         result.serialize();
         database.import(result.getFilename());
-        std::cout<<"Successfully joined tables "<<firstTable->getName()<<" and "<<secondTable->getName()<<" into "<<result.getName()<<"!\n";
+        std::cout << "Successfully joined tables " << firstTable->getName() << " and " << secondTable->getName() << " into " << result.getName() << "!\n";
     }
-    else {
-        std::cout<<"Couldn't find one of the tables!\n";
+    else
+    {
+        std::cout << "Couldn't find one of the tables!\n";
     }
 }
 
@@ -542,6 +649,134 @@ void DatabaseHandler::count(const std::string &table, size_t column, const std::
             }
         }
         std::cout << counter << " rows in column " << (*searchTable)[column - 1]->getName() << " contain value " << value << "!\n";
+    }
+    else
+    {
+        std::cout << "Couldn't find table with specified name!\n";
+    }
+}
+
+void DatabaseHandler::aggregate(const std::string &table, size_t searchColumn, const std::string &searchValue, size_t targetColumn, const std::string &operation)
+{
+    Table *searchTable = database.find(table);
+    if (searchTable != nullptr)
+    {
+        if ((*searchTable)[targetColumn - 1]->type() == "string")
+        {
+            std::cout << "Target column is not of numeric type!\n";
+        }
+        else
+        {
+            if (operation == "sum")
+            {
+                double sum = 0;
+
+                for (size_t i = 0; i < (*searchTable)[searchColumn - 1]->size(); i++)
+                {
+                    if ((*(*searchTable)[searchColumn - 1])[i] == searchValue)
+                    {
+
+                        if ((*searchTable)[targetColumn - 1]->type() == "integer")
+                        {
+                            IntColumn *col = dynamic_cast<IntColumn *>((*searchTable)[targetColumn - 1]);
+                            sum += col->valueAsNumber(i);
+                        }
+                        else if ((*searchTable)[targetColumn - 1]->type() == "double")
+                        {
+                            DoubleColumn *col = dynamic_cast<DoubleColumn *>((*searchTable)[targetColumn - 1]);
+                            sum += col->valueAsNumber(i);
+                        }
+                    }
+                }
+
+                std::cout << "The sum is: " << sum << '\n';
+            }
+            else if (operation == "product")
+            {
+                double product = 1;
+
+                for (size_t i = 0; i < (*searchTable)[searchColumn - 1]->size(); i++)
+                {
+                    if ((*(*searchTable)[searchColumn - 1])[i] == searchValue && (*(*searchTable)[targetColumn - 1])[i] != "NULL")
+                    {
+
+                        if ((*searchTable)[targetColumn - 1]->type() == "integer")
+                        {
+                            IntColumn *col = dynamic_cast<IntColumn *>((*searchTable)[targetColumn - 1]);
+                            product *= col->valueAsNumber(i);
+                        }
+                        else if ((*searchTable)[targetColumn - 1]->type() == "double")
+                        {
+                            DoubleColumn *col = dynamic_cast<DoubleColumn *>((*searchTable)[targetColumn - 1]);
+                            product *= col->valueAsNumber(i);
+                        }
+                    }
+                }
+                std::cout << "The product is: " << product << '\n';
+            }
+            else if (operation == "maximum")
+            {
+                double maximum = std::numeric_limits<double>::lowest();
+
+                for (size_t i = 0; i < (*searchTable)[searchColumn - 1]->size(); i++)
+                {
+                    if ((*(*searchTable)[searchColumn - 1])[i] == searchValue && (*(*searchTable)[targetColumn - 1])[i] != "NULL")
+                    {
+
+                        if ((*searchTable)[targetColumn - 1]->type() == "integer")
+                        {
+                            IntColumn *col = dynamic_cast<IntColumn *>((*searchTable)[targetColumn - 1]);
+                            if (col->valueAsNumber(i) > maximum)
+                            {
+                                maximum = col->valueAsNumber(i);
+                            }
+                        }
+                        else if ((*searchTable)[targetColumn - 1]->type() == "double")
+                        {
+                            DoubleColumn *col = dynamic_cast<DoubleColumn *>((*searchTable)[targetColumn - 1]);
+                            if (col->valueAsNumber(i) > maximum)
+                            {
+                                maximum = col->valueAsNumber(i);
+                            }
+                        }
+                    }
+                }
+                std::cout << "The maximum value is: " << maximum << '\n';
+            }
+            else if (operation == "minimum")
+            {
+                double minimum = std::numeric_limits<double>::max();
+
+                for (size_t i = 0; i < (*searchTable)[searchColumn - 1]->size(); i++)
+                {
+                    if ((*(*searchTable)[searchColumn - 1])[i] == searchValue && (*(*searchTable)[targetColumn - 1])[i] != "NULL")
+                    {
+
+                        if ((*searchTable)[targetColumn - 1]->type() == "integer")
+                        {
+                            IntColumn *col = dynamic_cast<IntColumn *>((*searchTable)[targetColumn - 1]);
+                            if (col->valueAsNumber(i) < minimum)
+                            {
+                                minimum = col->valueAsNumber(i);
+                            }
+                        }
+                        else if ((*searchTable)[targetColumn - 1]->type() == "double")
+                        {
+                            DoubleColumn *col = dynamic_cast<DoubleColumn *>((*searchTable)[targetColumn - 1]);
+                            if (col->valueAsNumber(i) < minimum)
+                            {
+                                minimum = col->valueAsNumber(i);
+                            }
+                        }
+                    }
+                }
+                std::cout << "The minimum value is: " << minimum << '\n';
+            }
+            else
+            {
+                std::cout << "Unrecognized operation!\n";
+            }
+        }
     }
     else
     {

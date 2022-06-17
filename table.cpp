@@ -153,11 +153,11 @@ void Table::deserialize()
 
 void Table::remove(size_t rowIndex)
 {
-    for (size_t i = 0; i < getColumns(); i++)
+    size_t count = getColumns();
+    for (size_t i = 0; i < count; i++)
     {
         columns[i]->remove(rowIndex);
     }
-
     rows_count--;
 }
 

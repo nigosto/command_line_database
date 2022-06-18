@@ -44,26 +44,25 @@ std::ostream &Database::serialize(std::ostream &os) const
 
 std::istream &Database::deserialize(std::istream &is)
 {
-    if (is.peek() != std::istream::traits_type::eof())
-    {
-        size_t size = 0;
-        is >> size;
+    size_t size = 0;
+    is >> size;
 
-        is.ignore();
-        for (size_t i = 0; i < size; i++)
+    is.ignore();
+    for (size_t i = 0; i < size; i++)
+    {
+        std::string name;
+        std::getline(is, name);
+        std::string filename;
+        std::getline(is, filename);
+        Table t(filename, name);
+        tables.push_back(t);
+        tables[i].deserialize();
+        if (tables[i].getFilename().find("recovery-") != std::string::npos)
         {
-            std::string name;
-            std::getline(is, name);
-            std::string filename;
-            std::getline(is, filename);
-            Table t(filename, name);
-            tables.push_back(t);
-            tables[i].deserialize();
-            if(tables[i].getFilename().find("recovery-") != std::string::npos) {
-                tables[i].changeFilename(filename.erase(0, 9));
-            }
+            tables[i].changeFilename(filename.erase(0, 9));
         }
     }
+
     return is;
 }
 

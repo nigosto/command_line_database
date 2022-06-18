@@ -13,9 +13,13 @@ Column::Column(const std::string &_name, size_t cells) : values(cells), name(_na
 
 void Column::push_back(const std::string &value)
 {
-    if (validate(value) || value == "NULL")
+    if (validate(value))
     {
         values.push_back(value);
+    }
+    else
+    {
+        values.push_back("NULL");
     }
 }
 
@@ -63,18 +67,37 @@ void Column::remove(size_t index)
     values.erase(std::begin(values) + index);
 }
 
-Column *Column::createColumn(const std::string &_type, const std::string& _name, size_t _cells)
+Column *Column::createColumn(const std::string &_type, const std::string &_name, size_t _cells)
 {
-    if(_type == "integer") {
+    if (_type == "integer")
+    {
         return new IntColumn(_name, _cells);
     }
-    else if(_type == "double") {
+    else if (_type == "double")
+    {
         return new DoubleColumn(_name, _cells);
     }
-    else if(_type == "string") {
+    else if (_type == "string")
+    {
         return new StringColumn(_name, _cells);
     }
-    else {
+    else
+    {
         return nullptr;
+    }
+}
+
+void Column::updateValue(size_t index, const std::string& value)
+{
+    if (index < 0 || index > values.size() - 1)
+    {
+        throw std::runtime_error("Invalid index!");
+    }
+
+    if(validate(value)) {
+        values[index] = value;
+    }
+    else {
+        throw std::invalid_argument("Invalid value!");
     }
 }

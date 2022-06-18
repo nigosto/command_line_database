@@ -407,11 +407,6 @@ void DatabaseHandler::open(const std::string &filename)
         filename,
         std::ios::in};
 
-    if (!is)
-    {
-        throw std::invalid_argument("Couldn't open specified file!");
-    }
-
     database.deserialize(is);
     is.close();
     isOpened = true;
@@ -830,7 +825,7 @@ void DatabaseHandler::update(const std::string &table, size_t searchColumn, cons
         {
             if ((*(*searchTable)[searchColumn - 1])[i] == searchValue)
             {
-                (*(*searchTable)[targetColumn - 1])[i] = targetValue;
+                (*searchTable)[targetColumn - 1]->updateValue(i, targetValue);
             }
         }
         searchTable->serialize(true);
@@ -900,9 +895,12 @@ void DatabaseHandler::innerjoin(const std::string &table1, size_t column1, const
         result.serialize();
         database.import(result.getFilename());
 
+        std::string firstName = firstTable->getName();
+        std::string secondName = secondTable->getName();
+
         result.serialize(true);
         saveTo("recovery.txt");
-        std::cout << "Successfully joined tables " << firstTable->getName() << " and " << secondTable->getName() << " into " << result.getName() << "!\n";
+        std::cout << "Successfully joined tables " << firstName << " and " << secondName << " into " << result.getName() << "!\n";
     }
     else
     {

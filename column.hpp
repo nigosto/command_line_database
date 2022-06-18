@@ -28,6 +28,7 @@ public:
     std::istream &deserialize(std::istream &is = std::cin) override;
     void remove(size_t index);
     static Column* createColumn(const std::string& _type, const std::string& _name = "", size_t _cells = 0);
+    void updateValue(size_t index, const std::string& value);
 };
 
 #endif

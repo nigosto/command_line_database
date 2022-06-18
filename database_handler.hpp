@@ -30,6 +30,13 @@ private:
     void count(const std::string& table, size_t column, const std::string& value);
     void innerjoin(const std::string& table1, size_t column1, const std::string& table2, size_t column2);
     void aggregate(const std::string& table, size_t searchColumn, const std::string& searchValue, size_t targetColumn, const std::string& operation);
+
+    double sum(const Table& table, const std::string& value, size_t searchColumn, size_t targetColumn) const;
+    double product(const Table& table, const std::string& value, size_t searchColumn, size_t targetColumn) const;
+    double maximum(const Table& table, const std::string& value, size_t searchColumn, size_t targetColumn) const;
+    double minimum(const Table& table, const std::string& value, size_t searchColumn, size_t targetColumn) const;
+
+    void visualizationInfo() const;
 public:
     static DatabaseHandler& getInstance();
     void readCommands();

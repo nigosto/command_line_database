@@ -12,7 +12,7 @@ public:
     DoubleColumn(const std::string& _name = "", size_t cells = 0);
     DoubleColumn *clone() const final;
     const std::string type() const final { return "double"; }
-    double valueAsNumber(size_t index);
+    double valueAsNumber(size_t index) const;
 };
 
 #endif

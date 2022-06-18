@@ -31,7 +31,7 @@ DoubleColumn *DoubleColumn::clone() const
     return new DoubleColumn(*this);
 }
 
-double DoubleColumn::valueAsNumber(size_t index)
+double DoubleColumn::valueAsNumber(size_t index) const
 {
     if ((*this)[index] == "NULL")
     {

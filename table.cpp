@@ -73,6 +73,15 @@ Column *Table::operator[](size_t index)
     return columns[index];
 }
 
+const Column *Table::operator[](size_t index) const
+{
+    if (index < 0 || index > columns.size() - 1)
+    {
+        throw std::runtime_error("Invalid index!");
+    }
+    return columns[index];
+}
+
 void Table::rename(const std::string &_name)
 {
     name = _name;
@@ -176,51 +185,26 @@ Table innerJoin(const Table &first, size_t firstColumn, const Table &second, siz
         }
     }
 
-    if (first.getRows() <= second.getRows())
+    for (size_t i = 0; i < std::min(first.getRows(), second.getRows()); i++)
     {
-        for (size_t i = 0; i < first.getRows(); i++)
+        for (size_t j = 0; j < std::max(first.getRows(), second.getRows()); j++)
         {
-            for (size_t j = 0; j < second.getRows(); j++)
+            if ((*first.columns[firstColumn])[i] == (*second.columns[secondColumn])[j])
             {
-                if ((*first.columns[firstColumn])[i] == (*second.columns[secondColumn])[j])
+                std::vector<std::string> v;
+                for (size_t k = 0; k < first.getColumns(); k++)
                 {
-                    std::vector<std::string> v;
-                    for (size_t k = 0; k < first.getColumns(); k++)
-                    {
-                        v.push_back((*first.columns[k])[i]);
-                    }
-                    for (size_t k = 0; k < second.getColumns(); k++)
-                    {
-                        v.push_back((*second.columns[k])[j]);
-                    }
-
-                    result.insertRow(v);
+                    v.push_back((*first.columns[k])[i]);
                 }
+                for (size_t k = 0; k < second.getColumns(); k++)
+                {
+                    v.push_back((*second.columns[k])[j]);
+                }
+
+                result.insertRow(v);
             }
         }
     }
-    else
-    {
-        for (size_t i = 0; i < second.getRows(); i++)
-        {
-            for (size_t j = 0; j < first.getRows(); j++)
-            {
-                if ((*first.columns[firstColumn])[j] == (*second.columns[secondColumn])[i])
-                {
-                    std::vector<std::string> v;
-                    for (size_t k = 0; k < first.getColumns(); k++)
-                    {
-                        v.push_back((*first.columns[k])[j]);
-                    }
-                    for (size_t k = 0; k < second.getColumns(); k++)
-                    {
-                        v.push_back((*second.columns[k])[i]);
-                    }
 
-                    result.insertRow(v);
-                }
-            }
-        }
-    }
     return result;
 }

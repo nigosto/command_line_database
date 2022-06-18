@@ -28,6 +28,7 @@ public:
     size_t getRows() const { return rows_count; }
     size_t getColumns() const { return columns_count; }
     Column *operator[](size_t index);
+    const Column *operator[](size_t index) const;
     void changeFilename(const std::string &file) { filename = file; }
     void remove(size_t rowIndex);
     friend Table innerJoin(const Table &first, size_t firstColumn, const Table &second, size_t secondColumn);

@@ -12,7 +12,7 @@ public:
     IntColumn(const std::string& _name = "", size_t cells = 0);
     IntColumn *clone() const final;
     const std::string type() const final { return "integer"; }
-    int valueAsNumber(size_t index);
+    int valueAsNumber(size_t index) const;
 };
 
 #endif

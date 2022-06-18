@@ -22,7 +22,7 @@ IntColumn *IntColumn::clone() const
     return new IntColumn(*this);
 }
 
-int IntColumn::valueAsNumber(size_t index)
+int IntColumn::valueAsNumber(size_t index) const
 {
     if ((*this)[index] == "NULL")
     {

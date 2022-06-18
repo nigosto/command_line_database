@@ -132,8 +132,8 @@ void Table::deserialize(bool recovery)
     std::string _name;
     std::getline(is, _name);
     name = _name;
-    size_t _columns_count;
-    size_t _rows_count;
+    size_t _columns_count = 0;
+    size_t _rows_count = 0;
     is >> _columns_count >> _rows_count;
     columns_count = _columns_count;
     rows_count = _rows_count;
@@ -144,6 +144,9 @@ void Table::deserialize(bool recovery)
         std::getline(is, type);
         columns.push_back(Column::createColumn(type));
         columns[i]->deserialize(is);
+    }
+    if(name == "") {
+        rename("empty");
     }
     is.close();
 }
